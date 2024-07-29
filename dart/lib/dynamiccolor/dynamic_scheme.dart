@@ -11,13 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import 'package:material_color_utilities/hct/hct.dart';
-import 'package:material_color_utilities/palettes/tonal_palette.dart';
-import 'package:material_color_utilities/utils/math_utils.dart';
 
-import 'dynamic_color.dart';
-import 'material_dynamic_colors.dart';
-import 'variant.dart';
+// ignore_for_file: deprecated_member_use_from_same_package
+
+import 'package:material_color_utilities/material_color_utilities.dart';
 
 /// Constructed by a set of values representing the current UI state (such as
 /// whether or not its dark theme, what the theme style is, etc.), and
@@ -25,9 +22,17 @@ import 'variant.dart';
 /// with the theme style. Used by [DynamicColor] to resolve into a color.
 class DynamicScheme {
   /// The source color of the theme as an ARGB integer.
+  @Deprecated(
+    'A dynamic scheme may pull from multiple source colors; '
+    'this should not be accessed directly.',
+  )
   final int sourceColorArgb;
 
   /// The source color of the theme in HCT.
+  @Deprecated(
+    'A dynamic scheme may pull from multiple source colors; '
+    'this should not be accessed directly.',
+  )
   final Hct sourceColorHct;
 
   /// The variant, or style, of the theme.
@@ -80,8 +85,40 @@ class DynamicScheme {
   })  : sourceColorArgb = sourceColorHct.toInt(),
         errorPalette = errorPalette ?? TonalPalette.of(25.0, 84.0);
 
+  factory DynamicScheme.fromVariant({
+    required Hct sourceColorHct,
+    required String variant,
+    required bool isDark,
+    required double contrastLevel,
+  }) {
+    final DynamicScheme Function({
+      required Hct sourceColorHct,
+      required bool isDark,
+      required double contrastLevel,
+    }) constructor = switch (Variant.fromLabel(variant)) {
+      Variant.monochrome => SchemeMonochrome.new,
+      Variant.neutral => SchemeNeutral.new,
+      Variant.tonalSpot => SchemeTonalSpot.new,
+      Variant.vibrant => SchemeVibrant.new,
+      Variant.expressive => SchemeExpressive.new,
+      Variant.content => SchemeContent.new,
+      Variant.fidelity => SchemeFidelity.new,
+      Variant.rainbow => SchemeRainbow.new,
+      Variant.fruitSalad => SchemeFruitSalad.new,
+    };
+
+    return constructor(
+      sourceColorHct: sourceColorHct,
+      isDark: isDark,
+      contrastLevel: contrastLevel,
+    );
+  }
+
   static double getRotatedHue(
-      Hct sourceColor, List<double> hues, List<double> rotations) {
+    Hct sourceColor,
+    List<double> hues,
+    List<double> rotations,
+  ) {
     final sourceHue = sourceColor.hue;
     assert(hues.length == rotations.length);
     if (rotations.length == 1) {
@@ -99,11 +136,12 @@ class DynamicScheme {
     // found using the arrays.
     return sourceHue;
   }
+}
 
+extension DynamicSchemeGetters on DynamicScheme {
   Hct getHct(DynamicColor dynamicColor) => dynamicColor.getHct(this);
   int getArgb(DynamicColor dynamicColor) => dynamicColor.getArgb(this);
 
-  // Getters.
   int get primaryPaletteKeyColor =>
       getArgb(MaterialDynamicColors.primaryPaletteKeyColor);
   int get secondaryPaletteKeyColor =>

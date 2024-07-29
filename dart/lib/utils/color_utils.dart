@@ -22,13 +22,13 @@ import 'package:material_color_utilities/utils/math_utils.dart';
 /// Utility methods for color science constants and color space
 /// conversions that aren't HCT or CAM16.
 class ColorUtils {
-  static final _srgbToXyz = [
+  static const _srgbToXyz = [
     [0.41233895, 0.35762064, 0.18051042],
     [0.2126, 0.7152, 0.0722],
     [0.01932141, 0.11916382, 0.95034478],
   ];
 
-  static final _xyzToSrgb = [
+  static const _xyzToSrgb = [
     [
       3.2413774792388685,
       -1.5376652402851851,
@@ -46,7 +46,7 @@ class ColorUtils {
     ],
   ];
 
-  static final _whitePointD65 = [95.047, 100.0, 108.883];
+  static const _whitePointD65 = [95.047, 100.0, 108.883];
 
   /// Converts a color from RGB components to ARGB format.
   static int argbFromRgb(int red, int green, int blue) {
@@ -88,7 +88,7 @@ class ColorUtils {
 
   /// Converts a color from ARGB to XYZ.
   static int argbFromXyz(double x, double y, double z) {
-    final matrix = _xyzToSrgb;
+    const matrix = _xyzToSrgb;
     final linearR = matrix[0][0] * x + matrix[0][1] * y + matrix[0][2] * z;
     final linearG = matrix[1][0] * x + matrix[1][1] * y + matrix[1][2] * z;
     final linearB = matrix[2][0] * x + matrix[2][1] * y + matrix[2][2] * z;

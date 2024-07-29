@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// ignore_for_file: deprecated_member_use_from_same_package
+
 import 'package:material_color_utilities/contrast/contrast.dart';
 import 'package:material_color_utilities/dynamiccolor/dynamic_color.dart';
 import 'package:material_color_utilities/dynamiccolor/material_dynamic_colors.dart';

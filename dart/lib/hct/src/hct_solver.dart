@@ -23,7 +23,7 @@ import 'package:material_color_utilities/utils/math_utils.dart';
 
 /// A class that solves the HCT equation.
 class HctSolver {
-  static final _scaledDiscountFromLinrgb = [
+  static const _scaledDiscountFromLinrgb = [
     [
       0.001200833568784504,
       0.002389694492170889,
@@ -41,7 +41,7 @@ class HctSolver {
     ],
   ];
 
-  static final _linrgbFromScaledDiscount = [
+  static const _linrgbFromScaledDiscount = [
     [
       1373.2198709594231,
       -1100.4251190754821,
@@ -59,9 +59,9 @@ class HctSolver {
     ],
   ];
 
-  static final _yFromLinrgb = [0.2126, 0.7152, 0.0722];
+  static const _yFromLinrgb = (0.2126, 0.7152, 0.0722);
 
-  static final _criticalPlanes = [
+  static const _criticalPlanes = [
     0.015176349177441876,
     0.045529047532325624,
     0.07588174588720938,
@@ -405,61 +405,53 @@ class HctSolver {
     return _lerpPoint(source, t, target);
   }
 
-  static bool _isBounded(double x) {
-    return 0.0 <= x && x <= 100.0;
-  }
-
   /// Returns the nth possible vertex of the polygonal intersection.
   ///
   /// Given a plane Y = [y] and an zero-based index [n] such that 0
   /// <= [n] <= 11, returns the nth possible vertex of the polygonal
   /// intersection of the plane and the RGB cube, in linear RGB
   /// coordinates, if it exists.
-  /// If this possible vertex lies outside of the cube, [-1.0, -1.0,
-  /// -1.0] is returned.
+  /// If this possible vertex lies outside of the cube, then
+  /// `[-1.0, -1.0, -1.0]` is returned.
   static List<double> _nthVertex(double y, int n) {
-    final kR = _yFromLinrgb[0];
-    final kG = _yFromLinrgb[1];
-    final kB = _yFromLinrgb[2];
+    final (kR, kG, kB) = _yFromLinrgb;
     final coordA = n % 4 <= 1 ? 0.0 : 100.0;
     final coordB = n % 2 == 0 ? 0.0 : 100.0;
-    if (n < 4) {
-      final g = coordA;
-      final b = coordB;
-      final r = (y - g * kG - b * kB) / kR;
-      if (_isBounded(r)) {
-        return [r, g, b];
-      } else {
-        return [-1.0, -1.0, -1.0];
-      }
-    } else if (n < 8) {
-      final b = coordA;
-      final r = coordB;
-      final g = (y - r * kR - b * kB) / kG;
-      if (_isBounded(g)) {
-        return [r, g, b];
-      } else {
-        return [-1.0, -1.0, -1.0];
-      }
+
+    final double r, g, b;
+    final bool isBounded;
+    switch (n) {
+      case < 4:
+        g = coordA;
+        b = coordB;
+        r = (y - g * kG - b * kB) / kR;
+        isBounded = 0.0 <= r && r <= 100.0;
+      case < 8:
+        b = coordA;
+        r = coordB;
+        g = (y - r * kR - b * kB) / kG;
+        isBounded = 0.0 <= g && g <= 100.0;
+      default:
+        r = coordA;
+        g = coordB;
+        b = (y - r * kR - g * kG) / kB;
+        isBounded = 0.0 <= b && b <= 100.0;
+    }
+
+    if (isBounded) {
+      return [r, g, b];
     } else {
-      final r = coordA;
-      final g = coordB;
-      final b = (y - r * kR - g * kG) / kB;
-      if (_isBounded(b)) {
-        return [r, g, b];
-      } else {
-        return [-1.0, -1.0, -1.0];
-      }
+      return const [-1.0, -1.0, -1.0];
     }
   }
 
   /// Finds the segment containing the desired color.
   ///
-  /// Given a plane Y = [y] and a desired [target_hue], returns the
+  /// Given a plane Y = [y] and a desired [targetHue], returns the
   /// segment containing the desired color, represented as an array of
   /// its two endpoints.
   static List<List<double>> _bisectToSegment(double y, double targetHue) {
-    var left = [-1.0, -1.0, -1.0];
+    var left = const [-1.0, -1.0, -1.0];
     var right = left;
     var leftHue = 0.0;
     var rightHue = 0.0;
@@ -501,13 +493,8 @@ class HctSolver {
     ];
   }
 
-  static int _criticalPlaneBelow(double x) {
-    return (x - 0.5).floor();
-  }
-
-  static int _criticalPlaneAbove(double x) {
-    return (x - 0.5).ceil();
-  }
+  static int _criticalPlaneBelow(double x) => (x - 0.5).floor();
+  static int _criticalPlaneAbove(double x) => (x - 0.5).ceil();
 
   /// Finds a color with the given Y and hue on the boundary of the
   /// cube.
@@ -521,8 +508,7 @@ class HctSolver {
     var right = segment[1];
     for (var axis = 0; axis < 3; axis++) {
       if (left[axis] != right[axis]) {
-        var lPlane = -1;
-        var rPlane = 255;
+        int lPlane, rPlane;
         if (left[axis] < right[axis]) {
           lPlane = _criticalPlaneBelow(_trueDelinearized(left[axis]));
           rPlane = _criticalPlaneAbove(_trueDelinearized(right[axis]));
@@ -569,7 +555,7 @@ class HctSolver {
     // ===========================================================
     // Operations inlined from Cam16 to avoid repeated calculation
     // ===========================================================
-    final viewingConditions = ViewingConditions.standard;
+    const viewingConditions = ViewingConditions.sRgb;
     final tInnerCoeff = 1 /
         pow(
           1.64 -
@@ -617,9 +603,7 @@ class HctSolver {
       if (linrgb[0] < 0 || linrgb[1] < 0 || linrgb[2] < 0) {
         return 0;
       }
-      final kR = _yFromLinrgb[0];
-      final kG = _yFromLinrgb[1];
-      final kB = _yFromLinrgb[2];
+      final (kR, kG, kB) = _yFromLinrgb;
       final fnj = kR * linrgb[0] + kG * linrgb[1] + kB * linrgb[2];
       if (fnj <= 0) {
         return 0;

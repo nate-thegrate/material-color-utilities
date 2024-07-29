@@ -54,14 +54,16 @@ class TonalPalette {
   final Map<int, int> _cache;
   final bool _isFromCache;
 
-  TonalPalette._fromHct(Hct hct)
+  /// Create a Tonal Palette from hue and chroma of [hct].
+  TonalPalette.fromHct(Hct hct)
       : _cache = {},
         hue = hct.hue,
         chroma = hct.chroma,
         keyColor = hct,
         _isFromCache = false;
 
-  TonalPalette._fromHueAndChroma(this.hue, this.chroma)
+  /// Create colors using [hue] and [chroma].
+  TonalPalette.of(this.hue, this.chroma)
       : _cache = {},
         keyColor = KeyColor(hue, chroma).create(),
         _isFromCache = false;
@@ -71,20 +73,10 @@ class TonalPalette {
         keyColor = KeyColor(hue, chroma).create(),
         _isFromCache = true;
 
-  /// Create colors using [hue] and [chroma].
-  static TonalPalette of(double hue, double chroma) {
-    return TonalPalette._fromHueAndChroma(hue, chroma);
-  }
-
-  /// Create a Tonal Palette from hue and chroma of [hct].
-  static TonalPalette fromHct(Hct hct) {
-    return TonalPalette._fromHct(hct);
-  }
-
   /// Create colors from a fixed-size list of ARGB color ints.
   ///
   /// Inverse of [TonalPalette.asList].
-  static TonalPalette fromList(List<int> colors) {
+  factory TonalPalette.fromList(List<int> colors) {
     assert(colors.length == commonSize);
     var cache = <int, int>{};
     commonTones.asMap().forEach(

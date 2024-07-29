@@ -30,6 +30,9 @@ bool _isMonochrome(DynamicScheme scheme) =>
     scheme.variant == Variant.monochrome;
 
 /// Tokens, or named colors, in the Material Design system.
+@Deprecated(
+  'Bad API design :(',
+)
 class MaterialDynamicColors {
   static const double contentAccentToneDelta = 15.0;
   static DynamicColor highestSurface(DynamicScheme s) {

@@ -13,7 +13,6 @@
 // limitations under the License.
 import 'package:material_color_utilities/dynamiccolor/dynamic_scheme.dart';
 import 'package:material_color_utilities/dynamiccolor/variant.dart';
-import 'package:material_color_utilities/hct/hct.dart';
 import 'package:material_color_utilities/palettes/tonal_palette.dart';
 import 'package:material_color_utilities/utils/math_utils.dart';
 
@@ -52,11 +51,10 @@ class SchemeExpressive extends DynamicScheme {
   ];
 
   SchemeExpressive({
-    required Hct sourceColorHct,
+    required super.sourceColorHct,
     required super.isDark,
     required super.contrastLevel,
   }) : super(
-          sourceColorHct: sourceColorHct,
           variant: Variant.expressive,
           primaryPalette: TonalPalette.of(
             MathUtils.sanitizeDegreesDouble(sourceColorHct.hue + 240.0),

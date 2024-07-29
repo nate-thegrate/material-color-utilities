@@ -13,7 +13,6 @@
 // limitations under the License.
 import 'package:material_color_utilities/dynamiccolor/dynamic_scheme.dart';
 import 'package:material_color_utilities/dynamiccolor/variant.dart';
-import 'package:material_color_utilities/hct/hct.dart';
 import 'package:material_color_utilities/palettes/tonal_palette.dart';
 import 'package:material_color_utilities/utils/math_utils.dart';
 
@@ -22,11 +21,10 @@ import 'package:material_color_utilities/utils/math_utils.dart';
 /// Material You theme on Android 12 and 13.
 class SchemeTonalSpot extends DynamicScheme {
   SchemeTonalSpot({
-    required Hct sourceColorHct,
+    required super.sourceColorHct,
     required super.isDark,
     required super.contrastLevel,
   }) : super(
-          sourceColorHct: sourceColorHct,
           variant: Variant.tonalSpot,
           primaryPalette: TonalPalette.of(sourceColorHct.hue, 36.0),
           secondaryPalette: TonalPalette.of(sourceColorHct.hue, 16.0),

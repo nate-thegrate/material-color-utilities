@@ -18,111 +18,78 @@ import 'cam16.dart';
 import 'src/hct_solver.dart';
 import 'viewing_conditions.dart';
 
-/// HCT, hue, chroma, and tone. A color system that provides a perceptually
-/// accurate color measurement system that can also accurately render what
-/// colors will appear as in different lighting environments.
+/// The color system used by designers today is HSL, or hue, saturation, lightness.
+/// HSL isn't remotely accurate, and doesn't try to be:
+/// it was built to make computing colors fast on 1970s computers.
+///
+/// Our brand new, perceptually accurate, color system is called HCT,
+/// which stands for hue, chroma, tone.
+///
+/// Even though HCT is brand new, it is built on existing work:
+/// color science defines many perceptually accurate color spaces.
+/// For simplicity, let's focus on two of them: `L* a* b`, also known as LCH
+/// (lightness, chroma, hue), and CAM16.
+///
+/// HCT's lightness measure, tone, is the same as `L* a* b*`'s lightness.
+/// Using that lightness measure, along with some math tricks,
+/// meant we could measure contrast with HCT, directly integrating
+/// contrast checker algorithms and accessibility requirements.
+///
+/// HCT's hue and colorfulness measures, hue and chroma, are the same as
+/// CAM16's hue and chroma. You may wonder why we didn't just use L*a*b*'s
+/// hue and chroma measures, then, we could have just use `L* a* b*`! However,
+/// when we tried using it in design, `L* a* b*` was too inconsistent perceptually.
+///
+/// For the first time, designers have a color system that truly reflects
+/// what users see, taking into account a range of variables to ensure
+/// appropriate color contrast, accessibility standards, and consistent
+/// lightness/colorfulness across hues.
 class Hct {
-  late double _hue;
-  late double _chroma;
-  late double _tone;
-  late int _argb;
+  /// A degree value between 0 and 360, representing the color's angle
+  /// as measured on a color wheel.
+  final double hue;
+
+  /// The perception-adjusted saturation.
+  final double chroma;
+
+  /// The perception-adjusted lightness.
+  final double tone;
+
+  /// [Hct.from] is similar to this constructor and additionally
+  /// contains preloaded [Cam16] data. The object created by [Hct.from]
+  /// also caches the result of [toInt] for efficient repeated access.
+  const Hct({required this.hue, required this.chroma, required this.tone})
+      : assert(
+          0 <= hue && hue <= 360,
+          'the "hue" should have a value between 0 and 360 degrees.',
+        ),
+        assert(
+          chroma >= 0,
+          'the "chroma" should be a non-negative number.',
+        ),
+        assert(
+          0 <= tone && tone <= 100,
+          'the "tone" should have a value between 0 and 100.',
+        );
+
+  /// HCT representation of [argb].
+  factory Hct.fromInt(int argb) = _HctFromCam16.fromInt;
 
   /// 0 <= [hue] < 360; invalid values are corrected.
   /// 0 <= [chroma] <= ?; Informally, colorfulness. The color returned may be
   ///    lower than the requested chroma. Chroma has a different maximum for any
   ///    given hue and tone.
   /// 0 <= [tone] <= 100; informally, lightness. Invalid values are corrected.
-  static Hct from(double hue, double chroma, double tone) {
-    final argb = HctSolver.solveToInt(hue, chroma, tone);
-    return Hct._(argb);
+  factory Hct.from(double hue, double chroma, double tone) {
+    return Hct.fromInt(HctSolver.solveToInt(hue, chroma, tone));
   }
 
-  @override
-  bool operator ==(o) {
-    if (o is! Hct) {
-      return false;
-    }
-    return o._argb == _argb;
-  }
+  static const Hct black = _Black();
 
-  @override
-  int get hashCode => _argb.hashCode;
-
-  @override
-  String toString() {
-    return 'H${hue.round().toString()} C${chroma.round()} T${tone.round().toString()}';
-  }
-
-  /// HCT representation of [argb].
-  static Hct fromInt(int argb) {
-    return Hct._(argb);
-  }
-
-  int toInt() {
-    return _argb;
-  }
-
-  /// A number, in degrees, representing ex. red, orange, yellow, etc.
-  /// Ranges from 0 <= [hue] < 360
-  double get hue {
-    return _hue;
-  }
-
-  /// 0 <= [newHue] < 360; invalid values are corrected.
-  /// After setting hue, the color is mapped from HCT to the more
-  /// limited sRGB gamut for display. This will change its ARGB/integer
-  /// representation. If the HCT color is outside of the sRGB gamut, chroma
-  /// will decrease until it is inside the gamut.
-  set hue(double newHue) {
-    _argb = HctSolver.solveToInt(newHue, chroma, tone);
-    final cam16 = Cam16.fromInt(_argb);
-    _hue = cam16.hue;
-    _chroma = cam16.chroma;
-    _tone = ColorUtils.lstarFromArgb(_argb);
-  }
-
-  double get chroma {
-    return _chroma;
-  }
-
-  /// 0 <= [newChroma] <= ?
-  /// After setting chroma, the color is mapped from HCT to the more
-  /// limited sRGB gamut for display. This will change its ARGB/integer
-  /// representation. If the HCT color is outside of the sRGB gamut, chroma
-  /// will decrease until it is inside the gamut.
-  set chroma(double newChroma) {
-    _argb = HctSolver.solveToInt(hue, newChroma, tone);
-    final cam16 = Cam16.fromInt(_argb);
-    _hue = cam16.hue;
-    _chroma = cam16.chroma;
-    _tone = ColorUtils.lstarFromArgb(_argb);
-  }
-
-  /// Lightness. Ranges from 0 to 100.
-  double get tone {
-    return _tone;
-  }
-
-  /// 0 <= [newTone] <= 100; invalid values are corrected.
-  /// After setting tone, the color is mapped from HCT to the more
-  /// limited sRGB gamut for display. This will change its ARGB/integer
-  /// representation. If the HCT color is outside of the sRGB gamut, chroma
-  /// will decrease until it is inside the gamut.
-  set tone(double newTone) {
-    _argb = HctSolver.solveToInt(hue, chroma, newTone);
-    final cam16 = Cam16.fromInt(_argb);
-    _hue = cam16.hue;
-    _chroma = cam16.chroma;
-    _tone = ColorUtils.lstarFromArgb(_argb);
-  }
-
-  Hct._(int argb) {
-    _argb = argb;
-    final cam16 = Cam16.fromInt(argb);
-    _hue = cam16.hue;
-    _chroma = cam16.chroma;
-    _tone = ColorUtils.lstarFromArgb(_argb);
-  }
+  /// The color in standard ARGB format.
+  ///
+  /// Can be used in Flutter's `Color()` constructor.
+  int toInt() => HctSolver.solveToInt(hue, chroma, tone);
 
   /// Translate a color into different [ViewingConditions].
   ///
@@ -137,26 +104,84 @@ class Hct {
   ///
   /// See [ViewingConditions.make] for parameters affecting color appearance.
   Hct inViewingConditions(ViewingConditions vc) {
+    final _HctFromCam16 cam16 = _HctFromCam16.fromInt(toInt());
+    return cam16.inViewingConditions(vc);
+  }
+}
+
+class _HctFromCam16 extends Cam16 implements Hct {
+  _HctFromCam16(
+    super.hue,
+    super.chroma,
+    this.tone,
+    super.j,
+    super.q,
+    super.m,
+    super.s,
+    super.jstar,
+    super.astar,
+    super.bstar,
+  );
+
+  late final _argb = HctSolver.solveToInt(hue, chroma, tone);
+
+  @override
+  int toInt() => _argb;
+
+  factory _HctFromCam16.fromInt(int argb) {
+    final [x, y, z] = ColorUtils.xyzFromArgb(argb);
+    final tone = ColorUtils.lstarFromY(y);
+
+    final Cam16(:hue, :chroma, :j, :q, :m, :s, :jstar, :astar, :bstar) =
+        Cam16.fromXyz(x, y, z);
+
+    return _HctFromCam16(hue, chroma, tone, j, q, m, s, jstar, astar, bstar);
+  }
+
+  @override
+  final double tone;
+
+  @override
+  String toString() => 'H${hue.round()} C${chroma.round()} T${tone.round()}';
+
+  @override
+  Hct inViewingConditions(ViewingConditions vc) {
     // 1. Use CAM16 to find XYZ coordinates of color in specified VC.
-    final cam16 = Cam16.fromInt(toInt());
-    final viewedInVc = cam16.xyzInViewingConditions(vc);
+    final [x, y, z] = xyzInViewingConditions(vc);
 
     // 2. Create CAM16 of those XYZ coordinates in default VC.
-    final recastInVc = Cam16.fromXyzInViewingConditions(
-      viewedInVc[0],
-      viewedInVc[1],
-      viewedInVc[2],
-      ViewingConditions.make(),
-    );
+    final Cam16(:hue, :chroma) = Cam16.fromXyz(x, y, z);
 
     // 3. Create HCT from:
     // - CAM16 using default VC with XYZ coordinates in specified VC.
     // - L* converted from Y in XYZ coordinates in specified VC.
-    final recastHct = Hct.from(
-      recastInVc.hue,
-      recastInVc.chroma,
-      ColorUtils.lstarFromY(viewedInVc[1]),
+    return Hct(
+      hue: hue,
+      chroma: chroma,
+      tone: ColorUtils.lstarFromY(y),
     );
-    return recastHct;
+  }
+}
+
+class _Black implements Hct {
+  const _Black();
+
+  @override
+  double get hue => 0.0;
+
+  @override
+  double get chroma => 0.0;
+
+  @override
+  double get tone => 0.0;
+
+  static const argb = 0xFF000000;
+
+  @override
+  int toInt() => argb;
+
+  @override
+  Hct inViewingConditions(ViewingConditions vc) {
+    return _HctFromCam16.fromInt(argb).inViewingConditions(vc);
   }
 }

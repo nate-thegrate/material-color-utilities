@@ -16,7 +16,6 @@ import 'dart:math' as math;
 import 'package:material_color_utilities/dislike/dislike_analyzer.dart';
 import 'package:material_color_utilities/dynamiccolor/dynamic_scheme.dart';
 import 'package:material_color_utilities/dynamiccolor/variant.dart';
-import 'package:material_color_utilities/hct/hct.dart';
 import 'package:material_color_utilities/palettes/tonal_palette.dart';
 import 'package:material_color_utilities/temperature/temperature_cache.dart';
 
@@ -30,11 +29,10 @@ import 'package:material_color_utilities/temperature/temperature_cache.dart';
 /// [TemperatureCache]. It also maintains constant appearance.
 class SchemeFidelity extends DynamicScheme {
   SchemeFidelity({
-    required Hct sourceColorHct,
+    required super.sourceColorHct,
     required super.isDark,
     required super.contrastLevel,
   }) : super(
-          sourceColorHct: sourceColorHct,
           variant: Variant.fidelity,
           primaryPalette: TonalPalette.of(
             sourceColorHct.hue,

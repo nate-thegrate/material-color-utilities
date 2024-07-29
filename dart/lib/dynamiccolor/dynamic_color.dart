@@ -43,37 +43,43 @@ import 'src/tone_delta_pair.dart';
 /// desired behavior of a color for any design system, but it usually
 /// unnecessary. See the default constructor for more information.
 class DynamicColor {
+  /// The name of the dynamic color.
   final String name;
+
+  /// Function that provides a TonalPalette given
+  /// DynamicScheme. A TonalPalette is defined by a hue and chroma, so this
+  /// replaces the need to specify hue/chroma. By providing a tonal palette,
+  /// when contrast adjustments are made, intended chroma can be preserved.
   final TonalPalette Function(DynamicScheme) palette;
+
+  /// Function that provides a tone, given a DynamicScheme.
   final double Function(DynamicScheme) tone;
+
+  /// Whether this dynamic color is a background, with
+  /// some other color as the foreground.
   final bool isBackground;
+
+  /// The background of the dynamic color (as a function of a [DynamicScheme]),
+  /// if it exists.
   final DynamicColor Function(DynamicScheme)? background;
+
+  /// A second background of the dynamic color (as a function
+  /// of a [DynamicScheme]), if it exists.
   final DynamicColor Function(DynamicScheme)? secondBackground;
+
+  /// A [ContrastCurve] object specifying how the contrast against
+  /// its background should behave in various contrast levels options.
   final ContrastCurve? contrastCurve;
+
+  /// A [ToneDeltaPair] object specifying a tone delta constraint
+  /// between two colors.
+  ///
+  /// One of them must be the color being constructed.
   final ToneDeltaPair Function(DynamicScheme)? toneDeltaPair;
 
   final Map<DynamicScheme, Hct> _hctCache = {};
 
   /// The base (explicit) constructor for [DynamicColor].
-  ///
-  /// [name] The name of the dynamic color.
-  /// [palette] Function that provides a TonalPalette given
-  /// DynamicScheme. A TonalPalette is defined by a hue and chroma, so this
-  /// replaces the need to specify hue/chroma. By providing a tonal palette,
-  /// when contrast adjustments are made, intended chroma can be preserved.
-  /// [tone] Function that provides a tone, given a DynamicScheme.
-  /// [isBackground] Whether this dynamic color is a background, with
-  /// some other color as the foreground.
-  /// [background] The background of the dynamic color (as a function of a
-  /// `DynamicScheme`), if it exists.
-  /// [secondBackground] A second background of the dynamic color (as a function
-  /// of a `DynamicScheme`), if it
-  /// exists.
-  /// [contrastCurve] A [ContrastCurve] object specifying how its contrast
-  /// against its background should behave in various contrast levels options.
-  /// [toneDeltaPair] A [ToneDeltaPair] object specifying a tone delta
-  /// constraint between two colors. One of them must be the color being
-  /// constructed.
   DynamicColor({
     required this.name,
     required this.palette,
@@ -89,25 +95,7 @@ class DynamicColor {
   ///
   /// Similar to the base constructor, but all parameters other than [palette]
   /// and [tone] have defaults.
-  ///
-  /// [name] The name of the dynamic color. Defaults to empty.
-  /// [palette] Function that provides a TonalPalette given
-  /// DynamicScheme. A TonalPalette is defined by a hue and chroma, so this
-  /// replaces the need to specify hue/chroma. By providing a tonal palette,
-  /// when contrast adjustments are made, intended chroma can be preserved.
-  /// [tone] Function that provides a tone, given a DynamicScheme.
-  /// [isBackground] Whether this dynamic color is a background, with
-  /// some other color as the foreground. Defaults to false.
-  /// [background] The background of the dynamic color (as a function of a
-  /// `DynamicScheme`), if it exists.
-  /// [secondBackground] A second background of the dynamic color (as a function
-  /// of a `DynamicScheme`), if it exists.
-  /// [contrastCurve] A [ContrastCurve] object specifying how its contrast
-  /// against its background should behave in various contrast levels options.
-  /// [toneDeltaPair] A [ToneDeltaPair] object specifying a tone delta
-  /// constraint between two colors. One of them must be the color being
-  /// constructed.
-  factory DynamicColor.fromPalette({
+  DynamicColor.fromPalette({
     String name = '',
     required TonalPalette Function(DynamicScheme) palette,
     required double Function(DynamicScheme) tone,
@@ -116,21 +104,19 @@ class DynamicColor {
     DynamicColor Function(DynamicScheme)? secondBackground,
     ContrastCurve? contrastCurve,
     ToneDeltaPair Function(DynamicScheme)? toneDeltaPair,
-  }) {
-    return DynamicColor(
-      name: name,
-      palette: palette,
-      tone: tone,
-      isBackground: isBackground,
-      background: background,
-      secondBackground: secondBackground,
-      contrastCurve: contrastCurve,
-      toneDeltaPair: toneDeltaPair,
-    );
-  }
+  }) : this(
+          name: name,
+          palette: palette,
+          tone: tone,
+          isBackground: isBackground,
+          background: background,
+          secondBackground: secondBackground,
+          contrastCurve: contrastCurve,
+          toneDeltaPair: toneDeltaPair,
+        );
 
   /// Return a ARGB integer (i.e. a hex code).
-
+  ///
   /// [scheme] Defines the conditions of the user interface, for example,
   /// whether or not it is dark mode or light mode, and what the desired
   /// contrast level is.
@@ -145,8 +131,7 @@ class DynamicColor {
   /// whether or not it is dark mode or light mode, and what the desired
   /// contrast level is.
   Hct getHct(DynamicScheme scheme) {
-    final cachedAnswer = _hctCache[scheme];
-    if (cachedAnswer != null) {
+    if (_hctCache[scheme] case final cachedAnswer?) {
       return cachedAnswer;
     }
     final tone = getTone(scheme);
@@ -154,8 +139,7 @@ class DynamicColor {
     if (_hctCache.length > 4) {
       _hctCache.clear();
     }
-    _hctCache[scheme] = answer;
-    return answer;
+    return _hctCache[scheme] = answer;
   }
 
   /// Return a tone, T in the HCT color space, that this [DynamicColor] is under
@@ -169,22 +153,30 @@ class DynamicColor {
 
     // Case 1: dual foreground, pair of colors with delta constraint.
     if (toneDeltaPair != null) {
-      final pair = toneDeltaPair!(scheme);
-      final roleA = pair.roleA;
-      final roleB = pair.roleB;
-      final delta = pair.delta;
-      final polarity = pair.polarity;
-      final stayTogether = pair.stayTogether;
+      final ToneDeltaPair(
+        :DynamicColor roleA,
+        :DynamicColor roleB,
+        :double delta,
+        :TonePolarity polarity,
+        :bool stayTogether,
+      ) = toneDeltaPair!(scheme);
 
-      final bg = background!(scheme);
-      final bgTone = bg.getTone(scheme);
+      final bgTone = background!(scheme).getTone(scheme);
 
-      final aIsNearer = (polarity == TonePolarity.nearer ||
-          (polarity == TonePolarity.lighter && !scheme.isDark) ||
-          (polarity == TonePolarity.darker && scheme.isDark));
-      final nearer = aIsNearer ? roleA : roleB;
-      final farther = aIsNearer ? roleB : roleA;
-      final amNearer = this.name == nearer.name;
+      final DynamicColor nearer, farther;
+      switch (polarity) {
+        case TonePolarity.nearer:
+        case TonePolarity.lighter when !scheme.isDark:
+        case TonePolarity.darker when scheme.isDark:
+          nearer = roleA;
+          farther = roleB;
+        case TonePolarity.farther:
+        case TonePolarity.lighter || TonePolarity.darker:
+          nearer = roleB;
+          farther = roleA;
+      }
+
+      final amNearer = name == nearer.name;
       final expansionDir = scheme.isDark ? 1 : -1;
 
       // 1st round: solve to min, each
@@ -194,12 +186,12 @@ class DynamicColor {
       // If a color is good enough, it is not adjusted.
       // Initial and adjusted tones for `nearer`
       final nInitialTone = nearer.tone(scheme);
-      var nTone = Contrast.ratioOfTones(bgTone, nInitialTone) >= nContrast
+      double nTone = Contrast.ratioOfTones(bgTone, nInitialTone) >= nContrast
           ? nInitialTone
           : DynamicColor.foregroundTone(bgTone, nContrast);
       // Initial and adjusted tones for `farther`
       final fInitialTone = farther.tone(scheme);
-      var fTone = Contrast.ratioOfTones(bgTone, fInitialTone) >= fContrast
+      double fTone = Contrast.ratioOfTones(bgTone, fInitialTone) >= fContrast
           ? fInitialTone
           : DynamicColor.foregroundTone(bgTone, fContrast);
 
@@ -210,15 +202,11 @@ class DynamicColor {
         fTone = DynamicColor.foregroundTone(bgTone, fContrast);
       }
 
-      if ((fTone - nTone) * expansionDir >= delta) {
-        // Good! Tones satisfy the constraint; no change needed.
-      } else {
-        // 2nd round: expand farther to match delta.
+      if ((fTone - nTone) * expansionDir < delta) {
+        // Expand farther to match delta.
         fTone = MathUtils.clampDouble(0, 100, nTone + delta * expansionDir);
-        if ((fTone - nTone) * expansionDir >= delta) {
-          // Good! Tones now satisfy the constraint; no change needed.
-        } else {
-          // 3rd round: contract nearer to match delta.
+        if ((fTone - nTone) * expansionDir < delta) {
+          // Contract nearer to match delta.
           nTone = MathUtils.clampDouble(0, 100, fTone - delta * expansionDir);
         }
       }
@@ -247,31 +235,24 @@ class DynamicColor {
           }
         } else {
           // Not required to stay together; fixes just one.
-          if (expansionDir > 0) {
-            fTone = 60;
-          } else {
-            fTone = 49;
-          }
+          fTone = scheme.isDark ? 60 : 49;
         }
       }
 
-      // Returns `nTone` if this color is `nearer`, otherwise `fTone`.
       return amNearer ? nTone : fTone;
     } else {
       // Case 2: No contrast pair; just solve for itself.
-      var answer = this.tone(scheme);
+      var answer = tone(scheme);
 
-      if (this.background == null) {
+      if (background == null) {
         return answer; // No adjustment for colors with no background.
       }
 
-      final bgTone = this.background!(scheme).getTone(scheme);
+      final bgTone = background!(scheme).getTone(scheme);
 
-      final desiredRatio = this.contrastCurve!.get(scheme.contrastLevel);
+      final desiredRatio = contrastCurve!.get(scheme.contrastLevel);
 
-      if (Contrast.ratioOfTones(bgTone, answer) >= desiredRatio) {
-        // Don't "improve" what's good enough.
-      } else {
+      if (Contrast.ratioOfTones(bgTone, answer) < desiredRatio) {
         // Rough improvement.
         answer = DynamicColor.foregroundTone(bgTone, desiredRatio);
       }
@@ -280,7 +261,7 @@ class DynamicColor {
         answer = DynamicColor.foregroundTone(bgTone, desiredRatio);
       }
 
-      if (this.isBackground && 50 <= answer && answer < 60) {
+      if (isBackground && 50 <= answer && answer < 60) {
         // Must adjust
         if (Contrast.ratioOfTones(49, bgTone) >= desiredRatio) {
           answer = 49;
@@ -289,11 +270,11 @@ class DynamicColor {
         }
       }
 
-      if (this.secondBackground != null) {
+      if (secondBackground != null) {
         // Case 3: Adjust for dual backgrounds.
 
-        final bgTone1 = this.background!(scheme).getTone(scheme);
-        final bgTone2 = this.secondBackground!(scheme).getTone(scheme);
+        final bgTone1 = background!(scheme).getTone(scheme);
+        final bgTone2 = secondBackground!(scheme).getTone(scheme);
 
         final upper = math.max(bgTone1, bgTone2);
         final lower = math.min(bgTone1, bgTone2);

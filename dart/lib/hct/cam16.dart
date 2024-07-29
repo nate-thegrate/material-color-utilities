@@ -83,11 +83,20 @@ class Cam16 {
   /// the following combinations:
   ///     -  {j or q} and {c, m, or s} and hue
   ///     - jstar, astar, bstar
-  /// Prefer using a static method that constructs from 3 of those dimensions.
+  /// Prefer using a factory method that constructs from 3 of those dimensions.
   /// This constructor is intended for those methods to use to return all
   /// possible dimensions.
-  Cam16(this.hue, this.chroma, this.j, this.q, this.m, this.s, this.jstar,
-      this.astar, this.bstar);
+  const Cam16(
+    this.hue,
+    this.chroma,
+    this.j,
+    this.q,
+    this.m,
+    this.s,
+    this.jstar,
+    this.astar,
+    this.bstar,
+  );
 
   /// CAM16 instances also have coordinates in the CAM16-UCS space, called J*,
   /// a*, b*, or jstar, astar, bstar in code. CAM16-UCS is included in the CAM16
@@ -97,33 +106,41 @@ class Cam16 {
     final dA = astar - other.astar;
     final dB = bstar - other.bstar;
     final dEPrime = math.sqrt(dJ * dJ + dA * dA + dB * dB);
-    final dE = 1.41 * math.pow(dEPrime, 0.63);
-    return dE;
+    return 1.41 * math.pow(dEPrime, 0.63);
   }
 
   /// Convert [argb] to CAM16, assuming the color was viewed in default viewing
   /// conditions.
-  static Cam16 fromInt(int argb) {
-    return fromIntInViewingConditions(argb, ViewingConditions.sRgb);
+  factory Cam16.fromInt(
+    int argb, [
+    ViewingConditions viewingConditions = ViewingConditions.sRgb,
+  ]) {
+    // Transform ARGB int to XYZ
+    final [x, y, z] = ColorUtils.xyzFromArgb(argb);
+    return Cam16.fromXyz(x, y, z, viewingConditions);
   }
 
   /// Given [viewingConditions], convert [argb] to CAM16.
-  static Cam16 fromIntInViewingConditions(
-      int argb, ViewingConditions viewingConditions) {
-    // Transform ARGB int to XYZ
-    final xyz = ColorUtils.xyzFromArgb(argb);
-    final x = xyz[0];
-    final y = xyz[1];
-    final z = xyz[2];
-    return fromXyzInViewingConditions(x, y, z, viewingConditions);
+  @Deprecated(
+    'use Cam16.fromInt() instead. '
+    'The "fromInt" factory optionally allows setting the viewing conditions.',
+  )
+  factory Cam16.fromIntInViewingConditions(
+    int argb, [
+    ViewingConditions viewingConditions = ViewingConditions.sRgb,
+  ]) {
+    return Cam16.fromInt(argb, viewingConditions);
   }
 
   /// Given color expressed in XYZ and viewed in [viewingConditions], convert to
   /// CAM16.
-  static Cam16 fromXyzInViewingConditions(
-      double x, double y, double z, ViewingConditions viewingConditions) {
+  factory Cam16.fromXyz(
+    double x,
+    double y,
+    double z, [
+    ViewingConditions viewingConditions = ViewingConditions.sRgb,
+  ]) {
     // Transform XYZ to 'cone'/'rgb' responses
-
     final rC = 0.401288 * x + 0.650173 * y - 0.051461 * z;
     final gC = -0.250268 * x + 1.204414 * y + 0.045854 * z;
     final bC = -0.002079 * x + 0.048952 * y + 0.953127 * z;
@@ -197,47 +214,74 @@ class Cam16 {
     final mstar = math.log(1.0 + 0.0228 * M) / 0.0228;
     final astar = mstar * math.cos(hueRadians);
     final bstar = mstar * math.sin(hueRadians);
+
     return Cam16(hue, C, J, Q, M, s, jstar, astar, bstar);
+  }
+
+  /// Given color expressed in XYZ and viewed in [viewingConditions], convert to
+  /// CAM16.
+  @Deprecated(
+    'use Cam16.fromXyz() instead. '
+    'The "fromXyz" factory optionally allows setting the viewing conditions.',
+  )
+  factory Cam16.fromXyzInViewingConditions(
+    double x,
+    double y,
+    double z, [
+    ViewingConditions viewingConditions = ViewingConditions.sRgb,
+  ]) {
+    return Cam16.fromXyz(x, y, z, viewingConditions);
   }
 
   /// Create a CAM16 color from lightness [j], chroma [c], and hue [h],
   /// assuming the color was viewed in default viewing conditions.
-  static Cam16 fromJch(double j, double c, double h) {
-    return fromJchInViewingConditions(j, c, h, ViewingConditions.sRgb);
-  }
-
-  /// Create a CAM16 color from lightness [j], chroma [c], and hue [h],
-  /// in [viewingConditions].
-  static Cam16 fromJchInViewingConditions(
-      double J, double C, double h, ViewingConditions viewingConditions) {
-    final Q = (4.0 / viewingConditions.c) *
-        math.sqrt(J / 100.0) *
+  factory Cam16.fromJch(
+    double j,
+    double c,
+    double h, [
+    ViewingConditions viewingConditions = ViewingConditions.sRgb,
+  ]) {
+    final q = (4.0 / viewingConditions.c) *
+        math.sqrt(j / 100.0) *
         (viewingConditions.aw + 4.0) *
         (viewingConditions.fLRoot);
-    final M = C * viewingConditions.fLRoot;
-    final alpha = C / math.sqrt(J / 100.0);
+    final m = c * viewingConditions.fLRoot;
+    final alpha = h / math.sqrt(j / 100.0);
     final s = 50.0 *
         math.sqrt((alpha * viewingConditions.c) / (viewingConditions.aw + 4.0));
 
     final hueRadians = h * math.pi / 180.0;
-    final jstar = (1.0 + 100.0 * 0.007) * J / (1.0 + 0.007 * J);
-    final mstar = 1.0 / 0.0228 * math.log(1.0 + 0.0228 * M);
+    final jstar = (1.0 + 100.0 * 0.007) * j / (1.0 + 0.007 * j);
+    final mstar = 1.0 / 0.0228 * math.log(1.0 + 0.0228 * m);
     final astar = mstar * math.cos(hueRadians);
     final bstar = mstar * math.sin(hueRadians);
-    return Cam16(h, C, J, Q, M, s, jstar, astar, bstar);
+
+    return Cam16(h, c, j, q, m, s, jstar, astar, bstar);
+  }
+
+  /// Create a CAM16 color from lightness [j], chroma [c], and hue [h],
+  /// in [viewingConditions].
+  @Deprecated(
+    'use Cam16.fromJch() instead. '
+    'The "fromJch" factory optionally allows setting the viewing conditions.',
+  )
+  factory Cam16.fromJchInViewingConditions(
+    double J,
+    double C,
+    double h, [
+    ViewingConditions viewingConditions = ViewingConditions.sRgb,
+  ]) {
+    return Cam16.fromJch(J, C, h, viewingConditions);
   }
 
   /// Create a CAM16 color from CAM16-UCS coordinates [jstar], [astar], [bstar].
   /// assuming the color was viewed in default viewing conditions.
-  static Cam16 fromUcs(double jstar, double astar, double bstar) {
-    return fromUcsInViewingConditions(
-        jstar, astar, bstar, ViewingConditions.standard);
-  }
-
-  /// Create a CAM16 color from CAM16-UCS coordinates [jstar], [astar], [bstar].
-  /// in [viewingConditions].
-  static Cam16 fromUcsInViewingConditions(double jstar, double astar,
-      double bstar, ViewingConditions viewingConditions) {
+  factory Cam16.fromUcs(
+    double jstar,
+    double astar,
+    double bstar, [
+    ViewingConditions viewingConditions = ViewingConditions.sRgb,
+  ]) {
     final a = astar;
     final b = bstar;
     final m = math.sqrt(a * a + b * b);
@@ -249,29 +293,40 @@ class Cam16 {
     }
     final j = jstar / (1 - (jstar - 100) * 0.007);
 
-    return Cam16.fromJchInViewingConditions(j, c, h, viewingConditions);
+    return Cam16.fromJch(j, c, h, viewingConditions);
+  }
+
+  /// Create a CAM16 color from CAM16-UCS coordinates [jstar], [astar], [bstar].
+  /// in [viewingConditions].
+  @Deprecated(
+    'use Cam16.fromUcs() instead. '
+    'The "fromUcs" factory optionally allows setting the viewing conditions.',
+  )
+  factory Cam16.fromUcsInViewingConditions(
+    double jstar,
+    double astar,
+    double bstar, [
+    ViewingConditions viewingConditions = ViewingConditions.sRgb,
+  ]) {
+    return Cam16.fromUcs(jstar, astar, bstar, viewingConditions);
   }
 
   /// ARGB representation of color, assuming the color was viewed in default
   /// viewing conditions.
-  int toInt() {
-    return viewed(ViewingConditions.sRgb);
-  }
-
-  // Avoid allocations during conversion by pre-allocating an array.
-  final _viewedArray = <double>[0, 0, 0];
+  int toInt() => viewed();
 
   /// ARGB representation of a color, given the color was viewed in
   /// [viewingConditions]
-  int viewed(ViewingConditions viewingConditions) {
-    final xyz = xyzInViewingConditions(viewingConditions, array: _viewedArray);
-    final argb = ColorUtils.argbFromXyz(xyz[0], xyz[1], xyz[2]);
-    return argb;
+  int viewed([ViewingConditions viewingConditions = ViewingConditions.sRgb]) {
+    final [x, y, z] = xyzInViewingConditions(viewingConditions);
+    return ColorUtils.argbFromXyz(x, y, z);
   }
 
   /// XYZ representation of CAM16 seen in [viewingConditions].
-  List<double> xyzInViewingConditions(ViewingConditions viewingConditions,
-      {List<double>? array}) {
+  List<double> xyzInViewingConditions(
+    ViewingConditions viewingConditions, {
+    List<double>? array,
+  }) {
     final alpha =
         (chroma == 0.0 || j == 0.0) ? 0.0 : chroma / math.sqrt(j / 100.0);
 

@@ -29,8 +29,29 @@ import 'package:material_color_utilities/utils/math_utils.dart';
 /// This class caches intermediate values of the CAM16 conversion process that
 /// depend only on viewing conditions, enabling speed ups.
 class ViewingConditions {
-  static final standard = sRgb;
-  static final sRgb = ViewingConditions.make();
+  @Deprecated(
+    'use ViewingConditions.sRgb instead.'
+    'The "sRgb" field has the same values and can be used in a constant context.',
+  )
+  static final standard = ViewingConditions.make();
+  static const sRgb = ViewingConditions(
+    whitePoint: [95.047, 100.0, 108.883],
+    adaptingLuminance: 11.725677948856951,
+    backgroundLstar: 50.0,
+    surround: 2.0,
+    discountingIlluminant: false,
+    backgroundYTowhitePointY: 0.18418651851244416,
+    aw: 29.980997194447337,
+    nbb: 1.0169191804458755,
+    ncb: 1.0169191804458755,
+    c: 0.69,
+    nC: 1.0,
+    drgbInverse: [0.0, 0.0, 0.0],
+    rgbD: [1.02117770275752, 0.9863077294280124, 0.9339605082802299],
+    fl: 0.3884814537800353,
+    fLRoot: 0.7894826179304937,
+    z: 1.909169568483652,
+  );
 
   final List<double> whitePoint;
   final double adaptingLuminance;
@@ -50,23 +71,24 @@ class ViewingConditions {
   final double fLRoot;
   final double z;
 
-  const ViewingConditions(
-      {required this.whitePoint,
-      required this.adaptingLuminance,
-      required this.backgroundLstar,
-      required this.surround,
-      required this.discountingIlluminant,
-      required this.backgroundYTowhitePointY,
-      required this.aw,
-      required this.nbb,
-      required this.ncb,
-      required this.c,
-      required this.nC,
-      required this.drgbInverse,
-      required this.rgbD,
-      required this.fl,
-      required this.fLRoot,
-      required this.z});
+  const ViewingConditions({
+    required this.whitePoint,
+    required this.adaptingLuminance,
+    required this.backgroundLstar,
+    required this.surround,
+    required this.discountingIlluminant,
+    required this.backgroundYTowhitePointY,
+    required this.aw,
+    required this.nbb,
+    required this.ncb,
+    required this.c,
+    required this.nC,
+    required this.drgbInverse,
+    required this.rgbD,
+    required this.fl,
+    required this.fLRoot,
+    required this.z,
+  });
 
   /// Convenience constructor for [ViewingConditions].
   ///
@@ -76,12 +98,13 @@ class ViewingConditions {
   /// [backgroundLstar]: average luminance of 10 degrees around color.
   /// [surround]: brightness of the entire environment.
   /// [discountingIlluminant]: whether eyes have adjusted to lighting.
-  factory ViewingConditions.make(
-      {List<double>? whitePoint,
-      double adaptingLuminance = -1.0,
-      double backgroundLstar = 50.0,
-      double surround = 2.0,
-      bool discountingIlluminant = false}) {
+  factory ViewingConditions.make({
+    List<double>? whitePoint,
+    double adaptingLuminance = -1.0,
+    double backgroundLstar = 50.0,
+    double surround = 2.0,
+    bool discountingIlluminant = false,
+  }) {
     whitePoint ??= ColorUtils.whitePointD65();
 
     adaptingLuminance = (adaptingLuminance > 0.0)
@@ -104,17 +127,14 @@ class ViewingConditions {
         ? MathUtils.lerp(0.59, 0.69, ((f - 0.9) * 10.0))
         : MathUtils.lerp(0.525, 0.59, ((f - 0.8) * 10.0));
     // Calculate degree of adaptation to illuminant
-    var d = discountingIlluminant
-        ? 1.0
-        : f *
-            (1.0 -
-                ((1.0 / 3.6) * math.exp((-adaptingLuminance - 42.0) / 92.0)));
+    double d = 1.0;
+    if (!discountingIlluminant) {
+      final adaptation = math.exp((-adaptingLuminance - 42.0) / 92.0) / 3.6;
+      d = f * (1.0 - adaptation);
+    }
     // Per Li et al, if D is greater than 1 or less than 0, set it to 1 or 0.
-    d = (d > 1.0)
-        ? 1.0
-        : (d < 0.0)
-            ? 0.0
-            : d;
+    d = d.clamp(0.0, 1.0);
+
     // chromatic induction factor
     final nc = f;
 
@@ -158,7 +178,7 @@ class ViewingConditions {
     final rgbAFactors = [
       math.pow(fl * rgbD[0] * rW / 100.0, 0.42),
       math.pow(fl * rgbD[1] * gW / 100.0, 0.42),
-      math.pow(fl * rgbD[2] * bW / 100.0, 0.42)
+      math.pow(fl * rgbD[2] * bW / 100.0, 0.42),
     ];
 
     final rgbA = [

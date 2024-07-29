@@ -45,7 +45,7 @@ void main() {
 
   test('conversions_areReflexive', () {
     final cam = Cam16.fromInt(red);
-    final color = cam.viewed(ViewingConditions.standard);
+    final color = cam.viewed();
     expect(color, equals(red));
   });
 
@@ -215,8 +215,10 @@ void main() {
     test('with array', () {
       final colorToTest = red;
       final cam = Cam16.fromInt(colorToTest);
-      final xyz =
-          cam.xyzInViewingConditions(ViewingConditions.sRgb, array: [0, 0, 0]);
+      final xyz = cam.xyzInViewingConditions(
+        ViewingConditions.sRgb,
+        array: [0, 0, 0],
+      );
       expect(xyz[0], closeTo(41.23, 0.01));
       expect(xyz[1], closeTo(21.26, 0.01));
       expect(xyz[2], closeTo(1.93, 0.01));

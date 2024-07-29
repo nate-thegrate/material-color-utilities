@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// ignore_for_file: deprecated_member_use_from_same_package
+
 import 'package:material_color_utilities/hct/hct.dart';
 import 'package:material_color_utilities/palettes/core_palette.dart';
 import 'package:material_color_utilities/palettes/tonal_palette.dart';

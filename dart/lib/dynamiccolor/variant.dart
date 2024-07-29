@@ -37,4 +37,13 @@ enum Variant {
   final String description;
 
   const Variant(this.label, this.description);
+
+  factory Variant.fromLabel(String label) {
+    for (final value in values) {
+      if (value.label == label) {
+        return value;
+      }
+    }
+    throw ArgumentError('label "$label" not found.');
+  }
 }

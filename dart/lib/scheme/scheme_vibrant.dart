@@ -13,7 +13,6 @@
 // limitations under the License.
 import 'package:material_color_utilities/dynamiccolor/dynamic_scheme.dart';
 import 'package:material_color_utilities/dynamiccolor/variant.dart';
-import 'package:material_color_utilities/hct/hct.dart';
 import 'package:material_color_utilities/palettes/tonal_palette.dart';
 
 /// A Dynamic Color theme that maxes out colorfulness at each position in the
@@ -52,11 +51,10 @@ class SchemeVibrant extends DynamicScheme {
   ];
 
   SchemeVibrant({
-    required Hct sourceColorHct,
+    required super.sourceColorHct,
     required super.isDark,
     required super.contrastLevel,
   }) : super(
-          sourceColorHct: sourceColorHct,
           variant: Variant.vibrant,
           primaryPalette: TonalPalette.of(sourceColorHct.hue, 200.0),
           secondaryPalette: TonalPalette.of(
