@@ -30,9 +30,6 @@ bool _isMonochrome(DynamicScheme scheme) =>
     scheme.variant == Variant.monochrome;
 
 /// Tokens, or named colors, in the Material Design system.
-@Deprecated(
-  'Bad API design :(',
-)
 class MaterialDynamicColors {
   static const double contentAccentToneDelta = 15.0;
   static DynamicColor highestSurface(DynamicScheme s) {
@@ -304,11 +301,12 @@ class MaterialDynamicColors {
     background: (s) => MaterialDynamicColors.highestSurface(s),
     contrastCurve: ContrastCurve(3, 4.5, 7, 7),
     toneDeltaPair: (s) => ToneDeltaPair(
-        MaterialDynamicColors.secondaryContainer,
-        MaterialDynamicColors.secondary,
-        10,
-        TonePolarity.nearer,
-        false),
+      MaterialDynamicColors.secondaryContainer,
+      MaterialDynamicColors.secondary,
+      10,
+      TonePolarity.nearer,
+      false,
+    ),
   );
 
   static DynamicColor onSecondary = DynamicColor.fromPalette(
@@ -336,18 +334,23 @@ class MaterialDynamicColors {
       if (!_isFidelity(s)) {
         return initialTone;
       }
-      return _findDesiredChromaByTone(s.secondaryPalette.hue,
-          s.secondaryPalette.chroma, initialTone, s.isDark ? false : true);
+      return _findDesiredChromaByTone(
+        s.secondaryPalette.hue,
+        s.secondaryPalette.chroma,
+        initialTone,
+        !s.isDark,
+      );
     },
     isBackground: true,
     background: (s) => MaterialDynamicColors.highestSurface(s),
     contrastCurve: ContrastCurve(1, 1, 3, 4.5),
     toneDeltaPair: (s) => ToneDeltaPair(
-        MaterialDynamicColors.secondaryContainer,
-        MaterialDynamicColors.secondary,
-        10,
-        TonePolarity.nearer,
-        false),
+      MaterialDynamicColors.secondaryContainer,
+      MaterialDynamicColors.secondary,
+      10,
+      TonePolarity.nearer,
+      false,
+    ),
   );
 
   static DynamicColor onSecondaryContainer = DynamicColor.fromPalette(
@@ -379,8 +382,13 @@ class MaterialDynamicColors {
     isBackground: true,
     background: (s) => MaterialDynamicColors.highestSurface(s),
     contrastCurve: ContrastCurve(3, 4.5, 7, 7),
-    toneDeltaPair: (s) => ToneDeltaPair(MaterialDynamicColors.tertiaryContainer,
-        MaterialDynamicColors.tertiary, 10, TonePolarity.nearer, false),
+    toneDeltaPair: (s) => ToneDeltaPair(
+      MaterialDynamicColors.tertiaryContainer,
+      MaterialDynamicColors.tertiary,
+      10,
+      TonePolarity.nearer,
+      false,
+    ),
   );
 
   static DynamicColor onTertiary = DynamicColor.fromPalette(
@@ -427,7 +435,9 @@ class MaterialDynamicColors {
         return s.isDark ? 90 : 30;
       }
       return DynamicColor.foregroundTone(
-          MaterialDynamicColors.tertiaryContainer.tone(s), 4.5);
+        MaterialDynamicColors.tertiaryContainer.tone(s),
+        4.5,
+      );
     },
     background: (s) => MaterialDynamicColors.tertiaryContainer,
     contrastCurve: ContrastCurve(3, 4.5, 7, 11),
@@ -440,8 +450,13 @@ class MaterialDynamicColors {
     isBackground: true,
     background: (s) => MaterialDynamicColors.highestSurface(s),
     contrastCurve: ContrastCurve(3, 4.5, 7, 7),
-    toneDeltaPair: (s) => ToneDeltaPair(MaterialDynamicColors.errorContainer,
-        MaterialDynamicColors.error, 10, TonePolarity.nearer, false),
+    toneDeltaPair: (s) => ToneDeltaPair(
+      MaterialDynamicColors.errorContainer,
+      MaterialDynamicColors.error,
+      10,
+      TonePolarity.nearer,
+      false,
+    ),
   );
 
   static DynamicColor onError = DynamicColor.fromPalette(

@@ -29,10 +29,22 @@ enum TonePolarity {
 /// designers want tonal distance, literally contrast, between two colors that
 /// don't have a background / foreground relationship or a contrast guarantee.
 class ToneDeltaPair {
+  /// The first role in a pair.
   final DynamicColor roleA;
+
+  /// The second role in a pair.
   final DynamicColor roleB;
+
+  /// Required difference between tones. Absolute value, negative
+  /// values have undefined behavior.
   final double delta;
+
+  /// The relative relation between tones of roleA and roleB.
   final TonePolarity polarity;
+
+  /// Whether these two roles should stay on the same side of
+  /// the "awkward zone" (T50-59). This is necessary for certain cases where
+  /// one role has two backgrounds.
   final bool stayTogether;
 
   /// Documents a constraint in tone distance between two DynamicColors.
@@ -47,16 +59,7 @@ class ToneDeltaPair {
   /// should be 10 lighter than B in light mode, and 10 darker than B in dark
   /// mode.
   ///
-  /// [roleA] The first role in a pair.
-  /// [roleB] The second role in a pair.
-  /// [delta] Required difference between tones. Absolute value, negative
-  /// values have undefined behavior.
-  /// [polarity] The relative relation between tones of roleA and roleB,
-  /// as described above.
-  /// [stayTogether] Whether these two roles should stay on the same side of
-  /// the "awkward zone" (T50-59). This is necessary for certain cases where
-  /// one role has two backgrounds.
-  ToneDeltaPair(
+  const ToneDeltaPair(
     this.roleA,
     this.roleB,
     this.delta,

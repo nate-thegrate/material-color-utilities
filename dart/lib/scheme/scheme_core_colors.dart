@@ -6,8 +6,10 @@ import 'package:material_color_utilities/palettes/tonal_palette.dart';
 class SchemeCoreColors implements DynamicScheme {
   @override
   final bool isDark;
+
   @override
   final double contrastLevel;
+
   @override
   final Variant variant;
 
@@ -16,7 +18,10 @@ class SchemeCoreColors implements DynamicScheme {
   final Hct? tertiaryCore;
   final Hct? errorCore;
   final Hct? neutralCore;
-  final Hct? neutralVariantCore;
+  final Hct? outlineCore;
+
+  @override
+  final Hct sourceColorHct;
 
   const SchemeCoreColors({
     this.isDark = false,
@@ -27,8 +32,8 @@ class SchemeCoreColors implements DynamicScheme {
     this.tertiaryCore,
     this.errorCore,
     this.neutralCore,
-    this.neutralVariantCore,
-  });
+    this.outlineCore,
+  }) : sourceColorHct = primaryCore ?? neutralCore ?? outlineCore ?? Hct.black;
 
   TonalPalette fromSeed(Hct? seedColor) {
     return DynamicScheme.fromVariant(
@@ -58,10 +63,7 @@ class SchemeCoreColors implements DynamicScheme {
   TonalPalette get neutralPalette => fromSeed(neutralCore);
 
   @override
-  TonalPalette get neutralVariantPalette => fromSeed(neutralVariantCore);
-
-  @override
-  Hct get sourceColorHct => primaryCore ?? Hct.black;
+  TonalPalette get neutralVariantPalette => fromSeed(outlineCore);
 
   @override
   int get sourceColorArgb => sourceColorHct.toInt();

@@ -78,31 +78,30 @@ class TonalPalette {
   /// Inverse of [TonalPalette.asList].
   factory TonalPalette.fromList(List<int> colors) {
     assert(colors.length == commonSize);
-    var cache = <int, int>{};
-    commonTones.asMap().forEach(
-        (int index, int toneValue) => cache[toneValue] = colors[index]);
+    final cache = <int, int>{
+      for (final (index, toneValue) in commonTones.indexed)
+        toneValue: colors[index],
+    };
 
     // Approximately deduces the original hue and chroma that generated this
     // list of colors.
     // Uses the hue and chroma of the provided color with the highest chroma.
 
-    var bestHue = 0.0, bestChroma = 0.0;
+    var best = Hct.black;
     for (final argb in colors) {
       final hct = Hct.fromInt(argb);
 
       // If the color is too close to white, its chroma may have been
       // affected by a known issue, so we ignore it.
       // https://github.com/material-foundation/material-color-utilities/issues/140
-
       if (hct.tone > 98.0) continue;
 
-      if (hct.chroma > bestChroma) {
-        bestHue = hct.hue;
-        bestChroma = hct.chroma;
+      if (hct.chroma > best.chroma) {
+        best = hct;
       }
     }
 
-    return TonalPalette._fromCache(cache, bestHue, bestChroma);
+    return TonalPalette._fromCache(cache, best.hue, best.chroma);
   }
 
   /// Returns a fixed-size list of ARGB color ints for common tone values.
@@ -122,7 +121,7 @@ class TonalPalette {
   int get(int tone) {
     return _cache.putIfAbsent(
       tone,
-      () => Hct.from(hue, chroma, tone.toDouble()).toInt(),
+      Hct.from(hue, chroma, tone.toDouble()).toInt,
     );
   }
 
@@ -138,9 +137,8 @@ class TonalPalette {
   Hct getHct(double tone) {
     if (_cache.containsKey(tone)) {
       return Hct.fromInt(_cache[tone]!);
-    } else {
-      return Hct.from(hue, chroma, tone);
     }
+    return Hct.from(hue, chroma, tone);
   }
 
   @override
@@ -239,8 +237,9 @@ class KeyColor {
 
   // Find the maximum chroma for a given tone
   double _maxChroma(int tone) {
-    return _chromaCache.putIfAbsent(tone, () {
-      return Hct.from(hue, _maxChromaValue, tone.toDouble()).chroma;
-    });
+    return _chromaCache.putIfAbsent(
+      tone,
+      () => Hct.from(hue, _maxChromaValue, tone.toDouble()).chroma,
+    );
   }
 }

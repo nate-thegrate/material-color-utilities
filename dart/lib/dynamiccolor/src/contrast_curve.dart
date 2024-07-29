@@ -20,17 +20,19 @@ import 'package:material_color_utilities/utils/math_utils.dart';
 /// background. The four values correspond to values for contrast levels
 /// -1.0, 0.0, 0.5, and 1.0, respectively.
 class ContrastCurve {
+  /// Value for contrast level -1.0
   final double low;
+
+  /// Value for contrast level 0.0
   final double normal;
+
+  /// Value for contrast level 0.5
   final double medium;
+
+  /// Value for contrast level 1.0
   final double high;
 
   /// Creates a `ContrastCurve` object.
-  ///
-  /// [low] Value for contrast level -1.0
-  /// [normal] Value for contrast level 0.0
-  /// [medium] Value for contrast level 0.5
-  /// [high] Value for contrast level 1.0
   ContrastCurve(
     this.low,
     this.normal,
@@ -43,17 +45,10 @@ class ContrastCurve {
   /// [contrastLevel] The contrast level. 0.0 is the default (normal);
   /// -1.0 is the lowest; 1.0 is the highest.
   /// Returns the value. For contrast ratios, a number between 1.0 and 21.0.
-  double get(double contrastLevel) {
-    if (contrastLevel <= -1.0) {
-      return low;
-    } else if (contrastLevel < 0.0) {
-      return MathUtils.lerp(low, normal, (contrastLevel - (-1)) / 1);
-    } else if (contrastLevel < 0.5) {
-      return MathUtils.lerp(normal, medium, (contrastLevel - 0) / 0.5);
-    } else if (contrastLevel < 1.0) {
-      return MathUtils.lerp(medium, high, (contrastLevel - 0.5) / 0.5);
-    } else {
-      return high;
-    }
-  }
+  double get(double contrastLevel) => switch (contrastLevel) {
+        <= -1 => low,
+        < 0 => MathUtils.lerp(low, normal, contrastLevel + 1),
+        < 0.5 => MathUtils.lerp(normal, medium, contrastLevel * 2),
+        _ => high,
+      };
 }

@@ -17,7 +17,7 @@
 import 'package:material_color_utilities/material_color_utilities.dart';
 
 /// Constructed by a set of values representing the current UI state (such as
-/// whether or not its dark theme, what the theme style is, etc.), and
+/// whether it's light or dark theme, what the theme style is, etc.), and
 /// provides a set of [TonalPalette]s that can create colors that fit in
 /// with the theme style. Used by [DynamicColor] to resolve into a color.
 class DynamicScheme {
@@ -86,8 +86,8 @@ class DynamicScheme {
         errorPalette = errorPalette ?? TonalPalette.of(25.0, 84.0);
 
   factory DynamicScheme.fromVariant({
-    required Hct sourceColorHct,
     required String variant,
+    required Hct sourceColorHct,
     required bool isDark,
     required double contrastLevel,
   }) {
