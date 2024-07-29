@@ -22,17 +22,9 @@ import 'package:material_color_utilities/material_color_utilities.dart';
 /// with the theme style. Used by [DynamicColor] to resolve into a color.
 class DynamicScheme {
   /// The source color of the theme as an ARGB integer.
-  @Deprecated(
-    'A dynamic scheme may pull from multiple source colors; '
-    'this should not be accessed directly.',
-  )
   final int sourceColorArgb;
 
   /// The source color of the theme in HCT.
-  @Deprecated(
-    'A dynamic scheme may pull from multiple source colors; '
-    'this should not be accessed directly.',
-  )
   final Hct sourceColorHct;
 
   /// The variant, or style, of the theme.
