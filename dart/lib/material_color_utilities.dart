@@ -33,6 +33,7 @@ export 'quantize/quantizer_wsmeans.dart';
 export 'quantize/quantizer_wu.dart';
 export 'scheme/scheme.dart';
 export 'scheme/scheme_content.dart';
+export 'scheme/scheme_core_colors.dart';
 export 'scheme/scheme_expressive.dart';
 export 'scheme/scheme_fidelity.dart';
 export 'scheme/scheme_fruit_salad.dart';
